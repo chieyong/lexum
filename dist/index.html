@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lexum — Frans leren</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+        rel="stylesheet">
+  <script type="module" crossorigin src="/assets/index-Dm7BCK7s.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-LkSvq0i0.css">
+</head>
+<body>
+
+    <div class="app">
+
+        <!-- ══ HEADER ══ -->
+        <header class="app-header">
+            <div class="app-logo">Lex<em>um</em></div>
+            <div class="header-actions">
+                <!-- Taalswitch -->
+                <div class="lang-switch" id="lang-switch">
+                    <button class="lang-btn active" id="lang-btn-fr" onclick="App.setLang('fr')">🇫🇷 Frans</button>
+                    <button class="lang-btn" id="lang-btn-en" onclick="App.setLang('en')">🇬🇧 Engels</button>
+                </div>
+                <!-- Inlogknop: alleen zichtbaar als niet ingelogd -->
+                <button class="btn-config-small" id="btn-login" onclick="Auth.signIn()">
+        Inloggen
+      </button>
+                <!-- User pill + dropdown wrapper -->
+                <div class="user-pill-wrap" id="user-pill-wrap" style="display:none">
+                    <div class="user-pill" id="user-pill" onclick="UI.toggleUserMenu()">
+                        <span id="user-initial">?</span>
+                        <span id="user-name">—</span>
+                    </div>
+                    <div class="user-menu" id="user-menu" style="display:none">
+                        <div class="user-menu-header">
+                            <div class="user-menu-name" id="menu-name">—</div>
+                            <div class="user-menu-email" id="menu-email">—</div>
+                            <div class="user-menu-role" id="menu-role"></div>
+                        </div>
+                        <div id="menu-children-section" style="display:none">
+                            <div class="user-menu-divider"></div>
+                            <div class="user-menu-children-header">Gekoppelde kinderen</div>
+                            <div id="menu-children-list"></div>
+                        </div>
+                        <div class="user-menu-divider"></div>
+                        <button class="user-menu-item" id="menu-add-child" style="display:none" onclick="UI.showAddChild();UI.closeUserMenu()">
+            👶 Kind toevoegen
+          </button>
+                        <button class="user-menu-item" id="menu-settings" style="display:none" onclick="UI.showConfig();UI.closeUserMenu()">
+            ⚙ Instellingen
+          </button>
+                        <button class="user-menu-item" onclick="UI.showThemePicker();UI.closeUserMenu()">
+            🎨 Thema kiezen
+          </button>
+                        <div class="user-menu-divider"></div>
+                        <button class="user-menu-item danger" onclick="Auth.signOut()">
+            ↩ Uitloggen
+          </button>
+                    </div>
+                </div>
+                <button class="btn-theme-paint" id="btn-theme-paint" onclick="UI.showThemePicker()" title="Thema kiezen" style="display:none">
+        🎨
+      </button>
+                <button class="btn-theme-toggle" id="btn-theme" onclick="UI.toggleTheme()" title="Licht/donker">
+        <span id="theme-icon">☀️</span>
+      </button>
+            </div>
+        </header>
+
+        <!-- ══ HOME ══ -->
+        <div id="screen-home" class="screen active">
+
+            <div id="sheet-error-banner"
+                style="display:none;background:var(--red-dim);border:1px solid var(--red);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--red);line-height:1.5;">
+                ⚠ Sheet kon niet worden geladen. Controleer de URL en of het bestand openbaar gedeeld is.
+                <button onclick="UI.showConfig()" style="display:block;margin-top:8px;background:none;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline;">Databron opnieuw instellen →</button>
+            </div>
+
+
+
+            <!-- Demo banner: alleen zichtbaar als niet ingelogd -->
+            <div id="demo-banner" style="display:none">
+                <div class="demo-banner" onclick="UI.showWelcomeModal()" role="button" style="cursor:pointer">
+                    <div class="demo-banner-text">
+                        <span class="demo-banner-label">Demo</span>
+                        Je oefent met voorbeelddata — <strong>ontdek wat Lexum voor jou kan doen →</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══ KIND VIEW (stats + oefenmodi) ══ -->
+            <div id="home-child-view">
+                <div class="greeting-block">
+                    <h1 class="greeting-title">Klaar voor een<br><strong>snelle ronde?</strong></h1>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-tile stat-tile--tip">
+                        <span class="stat-num" id="stat-studied">0</span>
+                        <span class="stat-label">Antwoorden vandaag</span>
+                        <div class="stat-tooltip">Kaarten die je vandaag hebt beantwoord</div>
+                    </div>
+                    <div class="stat-tile stat-tile--tip">
+                        <span class="stat-num" id="stat-week">0</span>
+                        <span class="stat-label">Dagen geoefend deze week</span>
+                        <div class="stat-tooltip">Dagen deze week waarop je hebt geoefend</div>
+                    </div>
+                </div>
+
+                <p class="section-label">Jouw voortgang</p>
+                <div id="child-progress-section">
+                    <div id="child-chapters-list" class="child-chapters-list"></div>
+                    <p class="child-progress-empty" id="child-progress-empty" style="display:none">
+                        Nog geen voortgang — start een oefening om te beginnen!
+                    </p>
+                </div>
+
+                <p class="section-label" style="margin-top:20px">Wat ga je doen?</p>
+                <div class="mode-grid">
+                    <div class="mode-card learn" onclick="App.selectMode('learn')">
+                        <div class="mode-icon learn">👁</div>
+                        <div class="mode-text">
+                            <h3>Leren</h3>
+                            <p>Woorden bekijken & onthouden</p>
+                        </div>
+                        <span class="mode-arrow">›</span>
+                    </div>
+                    <div class="mode-card words" onclick="App.selectMode('words')">
+                        <div class="mode-icon words">📝</div>
+                        <div class="mode-text">
+                            <h3>Vertalen</h3>
+                            <p id="mode-words-subtitle">Nederlands → Frans</p>
+                        </div>
+                        <span class="mode-arrow">›</span>
+                    </div>
+                    <div class="mode-card verbs" onclick="App.selectMode('verbs')">
+                        <div class="mode-icon verbs">⚡</div>
+                        <div class="mode-text">
+                            <h3>Vervoegen</h3>
+                            <p>Présent oefenen</p>
+                        </div>
+                        <span class="mode-arrow">›</span>
+                    </div>
+                    <div class="mode-card verbs" id="mode-card-past" onclick="App.selectMode('past')"
+                        style="display:none">
+                        <div class="mode-icon verbs">⏪</div>
+                        <div class="mode-text">
+                            <h3>Verleden tijd</h3>
+                            <p id="mode-past-subtitle">go → went</p>
+                        </div>
+                        <span class="mode-arrow">›</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ══ OUDER DASHBOARD ══ -->
+            <div id="parent-dashboard" style="display:none">
+                <div class="dashboard-header">
+                    <div>
+                        <h2 id="dash-child-title"
+                            style="font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-0.02em;line-height:1.4;padding-bottom:4px;color:var(--text)">
+                            Voortgang</h2>
+                        <div id="dash-child-subtitle" style="font-size:12px;color:var(--text-muted);margin-top:2px">
+                        </div>
+                    </div>
+                    <button class="dashboard-refresh" onclick="Dashboard.load()" title="Verversen">↻</button>
+                </div>
+
+                <!-- Kind selector (als meerdere kinderen) -->
+                <div class="child-tabs" id="dashboard-child-tabs"></div>
+
+                <!-- Loading state -->
+                <div id="dashboard-loading" class="dashboard-loading">
+                    <div class="dashboard-spinner"></div>
+                    <span>Voortgang laden…</span>
+                </div>
+
+                <!-- Content -->
+                <div id="dashboard-content" style="display:none">
+
+                    <!-- Samenvatting kaarten -->
+                    <div class="dash-summary-row">
+                        <div class="dash-kpi">
+                            <span class="dash-kpi-num" id="dash-total">0</span>
+                            <span class="dash-kpi-label">Geoefend</span>
+                        </div>
+                        <div class="dash-kpi">
+                            <span class="dash-kpi-num" id="dash-mastered">0</span>
+                            <span class="dash-kpi-label">Geleerd</span>
+                        </div>
+                        <div class="dash-kpi">
+                            <span class="dash-kpi-num" id="dash-streak">0</span>
+                            <span class="dash-kpi-label">Dag streak</span>
+                        </div>
+                        <div class="dash-kpi dash-kpi--warn">
+                            <span class="dash-kpi-num" id="dash-struggling">0</span>
+                            <span class="dash-kpi-label">Lastig</span>
+                        </div>
+                    </div>
+
+                    <!-- Activiteit grafiek (7 dagen) -->
+                    <div class="dash-card">
+                        <div class="dash-card-title">Activiteit afgelopen 7 dagen</div>
+                        <div class="dash-chart-wrap">
+                            <canvas id="dash-activity-chart" height="80"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Voortgang per hoofdstuk -->
+                    <div class="dash-card" id="dash-chapters-card" style="display:none">
+                        <div class="dash-card-title">Voortgang per hoofdstuk</div>
+                        <div id="dash-chapters-list"></div>
+                    </div>
+
+                    <!-- Moeilijke woorden -->
+                    <div class="dash-card" id="dash-struggling-card" style="display:none">
+                        <div class="dash-card-title">Woorden met meeste moeite</div>
+                        <div id="dash-struggling-list"></div>
+                    </div>
+
+                    <!-- Goed gekende woorden -->
+                    <div class="dash-card" id="dash-mastered-card" style="display:none">
+                        <div class="dash-card-title">Goed gekend ✓</div>
+                        <div id="dash-mastered-list"></div>
+                    </div>
+
+                </div>
+
+                <!-- Empty state -->
+                <div id="dashboard-empty" class="dashboard-empty" style="display:none">
+                    <p>Nog geen oefendata beschikbaar.<br>Het kind heeft nog niet ingelogd of geoefend.</p>
+                </div>
+
+                <!-- Ouder wil zelf ook oefenen -->
+                <div class="parent-practice-cta">
+                    <button class="btn-parent-practice" onclick="UI.showParentPractice()">
+          Zelf ook oefenen →
+        </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ══ LEARN SCREEN ══ -->
+        <div id="screen-learn" class="screen">
+            <div class="session-header">
+                <button class="btn-exit" onclick="Learn.exit()">← Stop</button>
+                <div class="progress-track">
+                    <div class="progress-fill" id="learn-progress-fill" style="width:0%"></div>
+                </div>
+                <span class="card-count" id="learn-card-count">1/10</span>
+            </div>
+
+            <div class="flashcard-stage">
+                <div class="learn-card card-enter" id="learn-card">
+                    <div class="learn-card-inner" id="learn-card-inner">
+
+                        <!-- VOOR: Franse kant -->
+                        <div class="learn-side learn-side--front">
+                            <div class="learn-breadcrumb" id="learn-breadcrumb"></div>
+                            <div class="learn-emoji" id="learn-emoji"></div>
+                            <div class="learn-fr" id="learn-fr">—</div>
+                            <div class="learn-article" id="learn-article"></div>
+                            <div class="learn-tap-hint">Tik om te draaien</div>
+                        </div>
+
+                        <!-- ACHTER: Nederlandse kant -->
+                        <div class="learn-side learn-side--back">
+                            <div class="learn-emoji" id="learn-emoji-back"></div>
+                            <div class="learn-nl" id="learn-nl">—</div>
+                            <div class="learn-fr-small" id="learn-fr-small"></div>
+                            <div class="learn-example" id="learn-example"></div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="learn-controls">
+                <button class="learn-btn-prev" id="learn-btn-prev" onclick="Learn.prev()">← Vorige</button>
+                <div class="learn-dots" id="learn-dots"></div>
+                <div class="learn-btn-group">
+                    <button class="learn-btn-show" id="learn-btn-show" onclick="Learn.flip()">Toon</button>
+                    <button class="learn-btn-next" id="learn-btn-next" onclick="Learn.next()">Volgende →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ LEARN SETUP ══ -->
+        <div id="screen-learn-setup" class="screen">
+            <div class="setup-header">
+                <button class="btn-back" onclick="UI.showScreen('home')" title="Terug">←</button>
+                <h2>Woorden leren</h2>
+            </div>
+
+            <div class="filter-section" id="learn-filter-category">
+                <span class="filter-label">Hoofdstuk</span>
+                <div class="accordion-list" id="learn-chapter-accordion"></div>
+            </div>
+
+            <div class="filter-section">
+                <span class="filter-label">Richting</span>
+                <div class="chip-row learn-direction-chips">
+                    <span class="chip selected" data-value="nl-fr" id="dir-chip-nl-fr" onclick="UI.selectChipSingle(this)">NL → FR</span>
+                    <span class="chip" data-value="fr-nl" id="dir-chip-fr-nl" onclick="UI.selectChipSingle(this)">FR → NL</span>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <span class="filter-label">Volgorde</span>
+                <div class="chip-row learn-order-chips">
+                    <span class="chip selected" data-value="ordered" onclick="UI.selectChipSingle(this)">Op volgorde</span>
+                    <span class="chip" data-value="random" onclick="UI.selectChipSingle(this)">Willekeurig</span>
+                </div>
+            </div>
+
+            <button class="btn-start" onclick="Learn.start()">Begin met leren</button>
+        </div>
+
+        <!-- ══ SETUP ══ -->
+        <div id="screen-setup" class="screen">
+            <div class="setup-header">
+                <button class="btn-back" onclick="UI.showScreen('home')" title="Terug">←</button>
+                <h2 id="setup-title">Woordjes oefenen</h2>
+            </div>
+
+            <div id="filter-chapters" class="filter-section">
+                <span class="filter-label">Hoofdstuk</span>
+                <div class="accordion-list" id="chapter-accordion"></div>
+            </div>
+
+            <div id="filter-verb-group" class="filter-section" style="display:none">
+                <span class="filter-label">Groep</span>
+                <div class="chip-row" id="verb-group-chips"></div>
+            </div>
+
+            <div class="filter-section">
+                <span class="filter-label">Aantal kaarten</span>
+                <div class="len-row" id="session-length-chips">
+                    <button class="len-chip"          data-value="10" onclick="UI.selectLen(this)">10</button>
+                    <button class="len-chip selected" data-value="20" onclick="UI.selectLen(this)">20</button>
+                    <button class="len-chip"          data-value="30" onclick="UI.selectLen(this)">30</button>
+                </div>
+            </div>
+
+            <button class="btn-start" id="btn-start" onclick="App.startSession()">Start sessie →</button>
+            <p class="empty-note" id="setup-empty">Geen kaarten beschikbaar voor deze selectie.</p>
+        </div>
+
+        <!-- ══ SESSION ══ -->
+        <div id="screen-session" class="screen">
+            <div class="session-topbar">
+                <button class="btn-exit" onclick="App.endSession()">← Stop</button>
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+                </div>
+                <span class="card-counter" id="card-counter">1/5</span>
+            </div>
+
+            <div class="flashcard-stage">
+                <div class="flashcard card-enter" id="flashcard">
+
+                    <span class="card-type-badge" id="card-badge">woordje</span>
+                    <span class="card-breadcrumb" id="card-breadcrumb"></span>
+
+                    <div class="card-direction" id="card-direction">Vertaal naar het Frans</div>
+                    <div class="card-word" id="card-word">—</div>
+                    <div class="card-hint-text" id="card-hint"></div>
+
+                    <div id="article-hint-wrap" style="display:none">
+                        <div class="article-hint">
+                            <span class="dot"></span>
+                            <span>lidwoord: <strong id="article-hint-val"></strong></span>
+                        </div>
+                    </div>
+
+                    <div class="input-row" id="input-row">
+                        <div id="verb-subject-row" style="display:none">
+                            <span class="verb-subject-label" id="verb-subject-label">je</span>
+                        </div>
+                        <input type="text" class="word-input" id="card-input"
+                 placeholder="Typ je antwoord..."
+                 autocomplete="off" autocapitalize="off" spellcheck="false">
+                        <button class="btn-check" id="btn-check" onclick="App.checkAnswer()">OK</button>
+                    </div>
+
+                    <div class="hint-wrap">
+                        <button class="btn-hint" id="btn-hint" onclick="App.showHint()">💡 hint</button>
+                    </div>
+                    <div class="hint-bubble" id="hint-bubble"></div>
+
+                    <div class="feedback-block" id="feedback-block">
+                        <div class="feedback-verdict" id="feedback-verdict"></div>
+                        <div class="feedback-answer" id="feedback-answer"></div>
+                        <div class="feedback-example" id="feedback-example"></div>
+                    </div>
+
+                    <div class="rating-row" id="rating-row">
+                    <button class="btn-rating btn-rating--good"  onclick="App.rateAnswer('good')">✓ Goed</button>
+                    <button class="btn-rating btn-rating--doubt" onclick="App.rateAnswer('doubt')">≈ Bijna</button>
+                    <button class="btn-rating btn-rating--bad"   onclick="App.rateAnswer('bad')">✗ Fout</button>
+                </div>
+
+                    <!-- Correct flash (shown briefly on correct answer) -->
+                    <div class="correct-flash" id="correct-flash">✓</div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SUMMARY ══ -->
+        <div id="screen-summary" class="screen">
+            <div class="summary-wrap">
+
+                <div class="summary-hero">
+                    <div class="summary-avatar" id="sum-avatar"></div>
+                    <h2 class="summary-title" id="sum-title">Goed gedaan!</h2>
+                    <p class="summary-sub" id="sum-sub">Je hebt weer geoefend — super!</p>
+                    <div class="score-band">
+                        <div class="score-item">
+                            <span class="score-num good"  id="sum-good">0</span>
+                            <span class="score-label">Goed</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-num doubt" id="sum-doubt">0</span>
+                            <span class="score-label">Bijna</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-num bad"   id="sum-bad">0</span>
+                            <span class="score-label">Opnieuw</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="diff-panel" id="diff-panel" style="display:none">
+                    <div class="diff-panel-head">Nog even oefenen</div>
+                    <div class="diff-list" id="diff-list"></div>
+                </div>
+
+                <div class="summary-actions">
+
+                    <button class="btn-primary" onclick="App.startSession()">Nog een sessie</button>
+                    <button class="btn-secondary" onclick="UI.showScreen('home')">Naar startscherm</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ══ LOADING ══ -->
+        <div id="screen-loading" class="screen">
+            <div class="loading-center">
+                <div class="spinner"></div>
+                <span>laden...</span>
+            </div>
+        </div>
+
+
+
+        <!-- ══ ROLKEUZE SCREEN ══ -->
+        <div id="screen-role" class="screen">
+            <div class="auth-wrap">
+                <div class="auth-hero">
+                    <div class="auth-logo">Lex<em>um</em></div>
+                    <div class="auth-tagline">Welkom! Wie ben jij?</div>
+                </div>
+                <p class="auth-desc" id="role-greeting"></p>
+                <div class="role-cards">
+                    <div class="role-card" onclick="Auth.confirmRole('parent')">
+                        <span class="role-icon">👨‍👩‍👧</span>
+                        <div>
+                            <div class="role-title">Ik ben een ouder</div>
+                            <div class="role-sub">Ik stel de woordenlijst in</div>
+                        </div>
+                        <span class="role-arrow">›</span>
+                    </div>
+                    <div class="role-card" onclick="Auth.confirmRole('child')">
+                        <span class="role-icon">🎒</span>
+                        <div>
+                            <div class="role-title">Ik ben een kind</div>
+                            <div class="role-sub">Ik ga oefenen</div>
+                        </div>
+                        <span class="role-arrow">›</span>
+                    </div>
+                </div>
+                <p class="auth-error" id="role-error" style="display:none"></p>
+            </div>
+        </div>
+
+        <!-- ══ KIND ONBEKEND SCREEN ══ -->
+        <div id="screen-child-unknown" class="screen">
+            <div class="auth-wrap">
+                <div class="auth-hero">
+                    <div class="auth-logo">Lex<em>um</em></div>
+                </div>
+                <div class="child-unknown-card">
+                    <div style="font-size:40px;margin-bottom:12px">⏳</div>
+                    <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">Bijna klaar!</h2>
+                    <p style="font-size:14px;color:var(--text-soft);margin-bottom:20px;line-height:1.5">
+                        Jouw ouder moet je e-mailadres toevoegen in de app. Geef dit adres door:
+                    </p>
+                    <div class="child-email-display" id="child-unknown-email"></div>
+                    <p style="font-size:13px;color:var(--text-muted);margin-top:16px;line-height:1.5">
+                        Zodra je ouder dat heeft gedaan, log je opnieuw in.
+                    </p>
+                </div>
+                <button class="btn-ghost" style="margin-top:20px;width:100%" onclick="Auth.signOut()">
+      ← Ander account gebruiken
+    </button>
+            </div>
+        </div>
+
+        <!-- ══ KIND TOEVOEGEN MODAL ══ -->
+        <div class="overlay" id="add-child-overlay">
+            <div class="modal">
+                <h3 class="modal-title">Kind toevoegen</h3>
+                <p class="modal-desc">Voeg het e-mailadres van je kind toe. Zodra je kind inlogt met dit adres, wordt
+                    het automatisch gekoppeld.</p>
+
+                <div class="field-group">
+                    <label class="field-label">Naam van je kind</label>
+                    <input type="text" class="field-input" id="child-name-input" placeholder="Bijv. Emma">
+                </div>
+                <div class="field-group">
+                    <label class="field-label">E-mailadres</label>
+                    <input type="email" class="field-input" id="child-email-input" placeholder="emma@gmail.com">
+                </div>
+
+                <div class="modal-status" id="add-child-status"></div>
+
+                <div class="modal-footer">
+                    <button class="btn-ghost" onclick="UI.hideAddChild()">Annuleren</button>
+                    <button class="btn-modal-primary" onclick="App.addChild()">Toevoegen →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ CONFIG MODAL ══ -->
+        <div class="overlay" id="config-overlay">
+            <div class="modal">
+                <h3 class="modal-title">Databron instellen</h3>
+                <p class="modal-desc">Koppel je Google Sheet. Zorg dat het bestand openbaar gedeeld is (Delen → Iedereen
+                    met de link → Lezer).</p>
+
+                <div
+                    style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">
+                    🇫🇷 Frans</div>
+                <div class="field-group">
+                    <label class="field-label">Google Sheet URL</label>
+                    <input type="text" class="field-input" id="cfg-sheet-words" placeholder="https://docs.google.com/spreadsheets/d/…/edit">
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Tab naam</label>
+                    <input type="text" class="field-input" id="cfg-tab-words" placeholder="Woorden" value="Woorden">
+                    <p style="font-size:11px;color:var(--text-muted);margin-top:4px">Één tab voor zowel woorden als
+                        werkwoorden. Voeg kolommen <code>type</code>, <code>group</code> en <code>verb_type</code> toe
+                        voor werkwoorden.</p>
+                </div>
+
+                <div style="height:1px;background:var(--border);margin:16px 0"></div>
+                <div
+                    style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">
+                    🇬🇧 Engels <span style="font-weight:400;text-transform:none;letter-spacing:0">(optioneel)</span>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Google Sheet URL</label>
+                    <input type="text" class="field-input" id="cfg-sheet-en" placeholder="https://docs.google.com/spreadsheets/d/…/edit">
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Tab naam</label>
+                    <input type="text" class="field-input" id="cfg-tab-en" placeholder="Woorden" value="Woorden">
+                </div>
+
+                <div class="modal-status" id="cfg-status"></div>
+
+                <div class="modal-footer">
+                    <button class="btn-ghost" onclick="UI.hideConfig()">Annuleren</button>
+                    <button class="btn-modal-primary" onclick="App.saveConfig()">Opslaan & laden</button>
+                </div>
+
+                <div class="demo-link">
+                    <button class="btn-demo-text" onclick="App.loadDemo()">Of gebruik demodata →</button>
+                </div>
+                <div class="demo-link" style="margin-top:6px">
+                    <button class="btn-demo-text" onclick="App.downloadTemplate()">⬇ Download template Frans + Engels (xlsx) →</button>
+                </div>
+
+                <div class="avatar-upload-section">
+                    <div class="field-label" style="margin-bottom:10px">Eigen afbeeldingen eindscherm</div>
+                    <div class="avatar-upload-row">
+                        <div class="avatar-upload-item" onclick="document.getElementById('upload-great').click()">
+                            <div class="avatar-upload-preview" id="preview-great">🌟</div>
+                            <div class="avatar-upload-label">≥ 70% goed</div>
+                            <input type="file" id="upload-great" accept="image/*" style="display:none" onchange="App.handleAvatarUpload('great', this)">
+                        </div>
+                        <div class="avatar-upload-item" onclick="document.getElementById('upload-meh').click()">
+                            <div class="avatar-upload-preview" id="preview-meh">👏</div>
+                            <div class="avatar-upload-label">40–69%</div>
+                            <input type="file" id="upload-meh" accept="image/*" style="display:none" onchange="App.handleAvatarUpload('meh', this)">
+                        </div>
+                        <div class="avatar-upload-item" onclick="document.getElementById('upload-bad').click()">
+                            <div class="avatar-upload-preview" id="preview-bad">💪</div>
+                            <div class="avatar-upload-label">
+                                &lt; 40%</div>
+                                    <input type="file" id="upload-bad" accept="image/*" style="display:none" onchange="App.handleAvatarUpload('bad', this)">
+                            </div>
+                        </div>
+                        <button class="btn-demo-text" style="margin-top:8px" onclick="App.resetAvatars()">↺ Terugzetten naar emoji's</button>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- ══ THEME PICKER ══ -->
+            <div class="theme-overlay" id="theme-overlay" onclick="if(event.target===this)UI.hideThemePicker()">
+                <div class="theme-sheet">
+                    <div class="theme-sheet-handle"></div>
+                    <div class="theme-sheet-title">🎨 Kies je thema</div>
+                    <div class="theme-sheet-sub">Kleur + licht of donker — onafhankelijk instelbaar</div>
+
+                    <!-- Dark / Light toggle -->
+                    <div style="display:flex;gap:8px;margin-bottom:4px">
+                        <button onclick="UI._applyColorTheme(localStorage.getItem('lexum_color_theme')||'default', false, false)"
+              id="theme-btn-dark"
+              style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border-hi);background:var(--surface-2);color:var(--text);font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;transition:all .18s">
+        🌑 Donker
+      </button>
+                        <button onclick="UI._applyColorTheme(localStorage.getItem('lexum_color_theme')||'default', true, false)"
+              id="theme-btn-light"
+              style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text-soft);font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;transition:all .18s">
+        ☀️ Licht
+      </button>
+                    </div>
+
+                    <div class="theme-group-label">⚡ Superhero</div>
+                    <div class="theme-grid">
+                        <div class="theme-swatch" data-theme="spiderman" style="background:#14141f"
+                            onclick="UI.applyTheme('spiderman')">
+                            <div class="swatch-dots">
+                                <span class="swatch-dot" style="background:#e8003a"></span><span class="swatch-dot" style="background:#3a8fff"></span><span class="swatch-dot" style="background:#14141f;border:1px solid #4a1a3a"></span>
+                            </div>
+                            <span class="swatch-name" style="color:#e8e8ff">Spider-Man</span>
+                            <span class="swatch-desc" style="color:#6a5580">Rood & blauw</span>
+                        </div>
+                        <div class="theme-swatch" data-theme="avengers" style="background:#13161f"
+                            onclick="UI.applyTheme('avengers')">
+                            <div class="swatch-dots">
+                                <span class="swatch-dot" style="background:#c8a800"></span><span class="swatch-dot" style="background:#4488ff"></span><span class="swatch-dot" style="background:#1a1e2e;border:1px solid #2e3558"></span>
+                            </div>
+                            <span class="swatch-name" style="color:#e8ecff">Avengers</span>
+                            <span class="swatch-desc" style="color:#5a6080">Goud & donkerblauw</span>
+                        </div>
+                        <div class="theme-swatch" data-theme="cosmic" style="background:#0e0a1e"
+                            onclick="UI.applyTheme('cosmic')">
+                            <div class="swatch-dots">
+                                <span class="swatch-dot" style="background:#00e5ff"></span><span class="swatch-dot" style="background:#a855f7"></span><span class="swatch-dot" style="background:#160f2e;border:1px solid #2e1e60"></span>
+                            </div>
+                            <span class="swatch-name" style="color:#e0d8ff">Cosmic</span>
+                            <span class="swatch-desc" style="color:#504070">Paars & cyaan</span>
+                        </div>
+                    </div>
+
+                    <div class="theme-group-label">🌸 Rustig & zacht</div>
+                    <div class="theme-grid">
+                        <div class="theme-swatch" data-theme="sakura" style="background:#faeef2;border-color:#f0d8e0"
+                            onclick="UI.applyTheme('sakura')">
+                            <div class="swatch-dots">
+                                <span class="swatch-dot" style="background:#d4547a"></span><span class="swatch-dot" style="background:#a0608a"></span><span class="swatch-dot" style="background:#ffffff;border:1px solid #f0d8e0"></span>
+                            </div>
+                            <span class="swatch-name" style="color:#2a1a22">Sakura</span>
+                            <span class="swatch-desc" style="color:#b090a0">Roze & warm</span>
+                        </div>
+                        <div class="theme-swatch" data-theme="sage" style="background:#ebefe8;border-color:#d8e0d0"
+                            onclick="UI.applyTheme('sage')">
+                            <div class="swatch-dots">
+                                <span class="swatch-dot" style="background:#3a7a4a"></span><span class="swatch-dot" style="background:#8a9e84"></span><span class="swatch-dot" style="background:#ffffff;border:1px solid #d8e0d0"></span>
+                            </div>
+                            <span class="swatch-name" style="color:#1e2a1a">Sage</span>
+                            <span class="swatch-desc" style="color:#8a9e84">Groen & aards</span>
+                        </div>
+                        <div class="theme-swatch" data-theme="cloud" style="background:#e8e6f4;border-color:#d4d0ec"
+                            onclick="UI.applyTheme('cloud')">
+                            <div class="swatch-dots">
+                                <span class="swatch-dot" style="background:#6655cc"></span><span class="swatch-dot" style="background:#4488bb"></span><span class="swatch-dot" style="background:#ffffff;border:1px solid #d4d0ec"></span>
+                            </div>
+                            <span class="swatch-name" style="color:#1a1830">Cloud</span>
+                            <span class="swatch-desc" style="color:#9090b8">Lila & zacht</span>
+                        </div>
+                    </div>
+
+                    <div class="theme-group-label">🧠 Minimalistisch</div>
+                    <div class="theme-grid">
+                        <div class="theme-swatch" data-theme="paper" style="background:#f0ede6;border-color:#e0dbd0"
+                            onclick="UI.applyTheme('paper')">
+                            <div class="swatch-dots">
+                                <span class="swatch-dot" style="background:#1a1810"></span><span class="swatch-dot" style="background:#9a9888"></span><span class="swatch-dot" style="background:#ffffff;border:1px solid #e0dbd0"></span>
+                            </div>
+                            <span class="swatch-name" style="color:#1a1810">Paper</span>
+                            <span class="swatch-desc" style="color:#9a9888">Crème & zwart</span>
+                        </div>
+                        <div class="theme-swatch" data-theme="midnight" style="background:#0a0a0a"
+                            onclick="UI.applyTheme('midnight')">
+                            <div class="swatch-dots">
+                                <span class="swatch-dot" style="background:#ffffff"></span><span class="swatch-dot" style="background:#888888"></span><span class="swatch-dot" style="background:#141414;border:1px solid #2e2e2e"></span>
+                            </div>
+                            <span class="swatch-name" style="color:#ffffff">Midnight</span>
+                            <span class="swatch-desc" style="color:#444444">Puur zwart & wit</span>
+                        </div>
+                        <div class="theme-swatch" data-theme="studio" style="background:#ebe8e2;border-color:#dbd8d0"
+                            onclick="UI.applyTheme('studio')">
+                            <div class="swatch-dots">
+                                <span class="swatch-dot" style="background:#e05a00"></span><span class="swatch-dot" style="background:#2a6050"></span><span class="swatch-dot" style="background:#ffffff;border:1px solid #dbd8d0"></span>
+                            </div>
+                            <span class="swatch-name" style="color:#1e1c18">Studio</span>
+                            <span class="swatch-desc" style="color:#989488">Oranje & warm grijs</span>
+                        </div>
+                    </div>
+
+                    <div class="theme-group-label">🎮 Speels</div>
+                    <div class="theme-grid">
+                        <div class="theme-swatch" data-theme="pixel" style="background:#0f180f"
+                            onclick="UI.applyTheme('pixel')">
+                            <div class="swatch-dots">
+                                <span class="swatch-dot" style="background:#00ff41"></span><span class="swatch-dot" style="background:#80cc80"></span><span class="swatch-dot" style="background:#162016;border:1px solid #2e502e"></span>
+                            </div>
+                            <span class="swatch-name" style="color:#c8ffc8">Pixel</span>
+                            <span class="swatch-desc" style="color:#407040">Retro groen</span>
+                        </div>
+                        <div class="theme-swatch" data-theme="candy" style="background:#220a38"
+                            onclick="UI.applyTheme('candy')">
+                            <div class="swatch-dots">
+                                <span class="swatch-dot" style="background:#ff44cc"></span><span class="swatch-dot" style="background:#44ffcc"></span><span class="swatch-dot" style="background:#2e1048;border:1px solid #5e2a8e"></span>
+                            </div>
+                            <span class="swatch-name" style="color:#fff0ff">Candy</span>
+                            <span class="swatch-desc" style="color:#7744aa">Neon roze</span>
+                        </div>
+                        <div class="theme-swatch" data-theme="ocean" style="background:#061828"
+                            onclick="UI.applyTheme('ocean')">
+                            <div class="swatch-dots">
+                                <span class="swatch-dot" style="background:#00ccff"></span><span class="swatch-dot" style="background:#00ffaa"></span><span class="swatch-dot" style="background:#0a2238;border:1px solid #1a4870"></span>
+                            </div>
+                            <span class="swatch-name" style="color:#d0eeff">Ocean</span>
+                            <span class="swatch-desc" style="color:#2e6090">Blauw & turquoise</span>
+                        </div>
+                    </div>
+
+                    <div class="theme-group-label">✦ Standaard</div>
+                    <div class="theme-grid">
+                        <div class="theme-swatch" data-theme="default" style="background:#17171a"
+                            onclick="UI.applyTheme('default')">
+                            <div class="swatch-dots">
+                                <span class="swatch-dot" style="background:#c8ff00"></span><span class="swatch-dot" style="background:#3dd68c"></span><span class="swatch-dot" style="background:#1f1f23;border:1px solid #2a2a2f"></span>
+                            </div>
+                            <span class="swatch-name" style="color:#f4f4f6">Lexum</span>
+                            <span class="swatch-desc" style="color:#72727f">Origineel thema</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="toast" id="toast"></div>
+
+            <!-- ══ WELCOME / LANDING MODAL ══ -->
+            <div class="overlay" id="welcome-overlay" onclick="UI.hideWelcomeModal(event)">
+                <div class="welcome-modal" onclick="event.stopPropagation()">
+
+                    <!-- Close -->
+                    <button class="welcome-close" onclick="UI.hideWelcomeModal()">✕</button>
+
+                    <!-- Hero -->
+                    <div class="welcome-hero">
+                        <div class="welcome-logo">Lex<em>um</em></div>
+                        <p class="welcome-tagline">Frans leren, op jouw tempo.<br>Samen met je ouder.</p>
+                    </div>
+
+                    <!-- Feature cards -->
+                    <div class="welcome-features">
+                        <div class="welcome-feature">
+                            <div class="welcome-feature-icon">📋</div>
+                            <div>
+                                <div class="welcome-feature-title">Jouw eigen woordenlijst</div>
+                                <div class="welcome-feature-desc">Koppel een Google Sheet met de woorden van school.
+                                    Lexum maakt er direct flashcards van.</div>
+                            </div>
+                        </div>
+                        <div class="welcome-feature">
+                            <div class="welcome-feature-icon">📊</div>
+                            <div>
+                                <div class="welcome-feature-title">Voortgang op elk apparaat</div>
+                                <div class="welcome-feature-desc">Of je nu oefent op je telefoon, tablet of laptop — je
+                                    voortgang wordt altijd bewaard.</div>
+                            </div>
+                        </div>
+                        <div class="welcome-feature">
+                            <div class="welcome-feature-icon">👨‍👩‍👧</div>
+                            <div>
+                                <div class="welcome-feature-title">Ouder blijft op de hoogte</div>
+                                <div class="welcome-feature-desc">Als ouder zie je welke woorden je kind goed kent en
+                                    waar nog wat extra aandacht nodig is.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Social proof -->
+                    <div class="welcome-proof">
+                        <div class="welcome-proof-stars">★★★★★</div>
+                        <p class="welcome-proof-quote">"Eindelijk een app die werkt met de woordenlijsten van school.
+                            Matthew is echt beter geworden in Frans."</p>
+                        <div class="welcome-proof-author">— Ouder van een brugklasser</div>
+                    </div>
+
+                    <!-- CTA -->
+                    <div class="welcome-cta">
+                        <button class="welcome-btn-primary" onclick="Auth.signIn()">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink:0"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+        Gratis starten met Google
+      </button>
+                        <p class="welcome-cta-sub">Geen wachtwoord nodig · Gratis te gebruiken</p>
+                    </div>
+
+                </div>
+            </div>
+
+</body>
