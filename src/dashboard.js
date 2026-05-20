@@ -40,6 +40,7 @@ export const Dashboard = (() => {
     } catch(e) {
       console.warn('[Dashboard] load mislukt:', e);
       _showLoading(false);
+      document.getElementById('dashboard-empty').style.display = '';
     }
   }
 
@@ -117,20 +118,23 @@ export const Dashboard = (() => {
   async function _render(summary) {
     const lang = App.getLang();
 
-    // Laad juiste sheet voor lookup op basis van actieve taal
-    const cfg = Data.getConfig();
-    try {
-      if (lang === 'en' && cfg?.sheetEn) {
-        await Data.loadFromSheet(cfg.sheetEn, cfg.tabEn || 'Woorden');
-      } else if (cfg?.sheetWords) {
-        await Data.loadFromSheet(cfg.sheetWords, cfg.tabWords || 'Woorden');
-      } else {
+    // App.loadData() is al eerder aangeroepen — laad alleen opnieuw als data leeg is
+    // (voorkomt dat words/verbs gereset worden terwijl het home screen al zichtbaar is)
+    if (Data.getWords().length === 0 && Data.getVerbs().length === 0) {
+      const cfg = Data.getConfig();
+      try {
+        if (lang === 'en' && cfg?.sheetEn) {
+          await Data.loadFromSheet(cfg.sheetEn, cfg.tabEn || 'Woorden');
+        } else if (cfg?.sheetWords) {
+          await Data.loadFromSheet(cfg.sheetWords, cfg.tabWords || 'Woorden');
+        } else {
+          if (lang === 'en') Data.loadEnglishDemoData();
+          else Data.loadDemoData();
+        }
+      } catch(e) {
         if (lang === 'en') Data.loadEnglishDemoData();
         else Data.loadDemoData();
       }
-    } catch(e) {
-      if (lang === 'en') Data.loadEnglishDemoData();
-      else Data.loadDemoData();
     }
 
     // Filter progress op actieve taal op basis van originele data

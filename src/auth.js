@@ -13,7 +13,10 @@ export const Auth = (() => {
   async function signIn() {
     await supa.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.href.split('?')[0] }
+      options: {
+        redirectTo: window.location.href.split('?')[0],
+        queryParams: { prompt: 'select_account' },
+      }
     });
   }
 
